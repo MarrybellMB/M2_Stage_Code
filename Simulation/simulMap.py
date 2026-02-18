@@ -1,0 +1,101 @@
+'''A module containing several useful functions to simulate and fit sky maps.'''
+
+### Package importation:
+import numpy as np
+import healpy as hp
+import matplotlib.pyplot as plt
+
+from iminuit import Minuit
+from iminuit.cost import LeastSquares
+
+
+### Functions definition:
+
+## Simulation functions:
+def get_RADEC2NSource(NSIDE, NSource_px_th):
+    '''Return the simulated number of sources by pixel, the right-ascention and the declination, by uniformally randomizing RA and DEC, depending on the resolution NSIDE and the theorical number of sources by pixel NSource_px_th.'''
+    #RA, DEC simulation:
+    NPIX = hp.nside2npix(NSIDE)
+    RA = np.random.uniform(0, 360, int(NPIX*NSource_px_th))
+    DEC_sin = np.random.uniform(-1, 1, int(NPIX*NSource_px_th)) #pour DEC, il faut passer par sin(DEC), compris entre -1 et 1
+    DEC = np.degrees(np.arcsin(DEC_sin))
+
+    #Number of sources by pixel conversion:
+    NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True)
+    NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
+    plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
+    return NSource_px, RA, DEC
+
+## Plot functions:
+def get_hist(x, title='', xlabel='Nb. of sources by pixel', ylabel='', show=True, **kwargs):
+    '''Plot the histogram of x, and return the corresponding var, bins obtained from this histogram by:
+    var, bins = plt.hist(x, **kwargs)[:-1]
+    bins = (bins[1:] + bins[:-1])/2
+
+    Optionnal parameters:
+    - title, xlabel, ylabel and **kwargs: allow to custom the histogram.
+    - show: says if the histogram has to be showed by "if show: plt.show()".
+    '''
+    var, bins = plt.hist(x, **kwargs)[:-1]
+    if title: plt.title(title)
+    if xlabel: plt.xlabel(xlabel)
+    if ylabel: plt.xlabel(ylabel)
+    bins = (bins[1:] + bins[:-1])/2
+    if show: plt.show()
+    return var, bins
+
+
+def plot_fit(x_fit, y_fit, values, model, **kwargs):
+    '''Plot on a same figure data and its fit, and return the corresponding fig, ax variables.
+    
+    Parameters:
+    - x_fit, y_fit: original data used to compute the fit.
+    - values: tuple containing the parameter values obtainds by the fit.
+    - model: fitted function. The fit plot is obtained by: ax.plot(bins, model(x_fit, *values))
+
+    Spetial keys for **kwargs:
+     - title, xlabel, ylabel: allow to custom the figure.
+     - figax: allow to use existing fig, ax variables, rather creating new ones; have to be tuple (fig, ax).
+    '''
+    if "figax" in kwargs.keys(): fig, ax = kwargs["figax"] #figax have to be tuple (fig, ax).
+    else: fig, ax = plt.subplots()
+    ax.scatter(x_fit, y_fit, label="data")
+    ax.plot(x_fit, model(x_fit, *values), c="r", label="fit")
+    ax.legend()
+    if "title" in kwargs.keys(): ax.set_title(kwargs["title"])
+    if "xlabel" in kwargs.keys(): ax.set_xlabel(kwargs["xlabel"])
+    if "ylabel" in kwargs.keys(): ax.set_xlabel(kwargs["ylabel"])
+    return fig, ax
+
+
+## Fit functions:
+def fit_minuit(x_fit, y_fit, y_err, model, init, par_name, get_fig=False, **kwargs):
+    '''Fit data with iminuit and the least squares methode, and return the corresponding Minuit() instance.
+    Also show the figure with both data and fit, by using plot_fit(x_fit, y_fit, values, model, **kwargs).
+
+    Parameters:
+    - x_fit, y_fit: original data used to compute the fit.
+    - y_err: error on y_fit.
+    - model: function to fit.
+    - init: tuple containing the initial parameter values for the fit.
+    - par_name: tuple containing the names of the model parameters.
+
+    Optionnal parameters:
+    - get_fig: if True, return also the fig, ax variables from the data&fit figure. By default, get_fig=False.
+    '''
+    least_squares = LeastSquares(x_fit, y_fit, y_err, model)
+    m = Minuit(least_squares, *init, name=par_name)
+    m.migrad()       # finds minimum of least_squares function
+    m.hesse()        # accurately computes uncertainties
+    try: m.minos()   # computes non symetrics uncertainties
+    except: print('Unable to use minos()')
+
+    fig, ax = plot_fit(x_fit, y_fit, m.values, model, **kwargs)
+    if get_fig: return m, fig, ax
+    else: return m
+
+    
+## Fit models:
+def gauss(x,A,mu,sigma):
+    '''Return the usual gauss fuction of, depending on the amplitude A, the mean mu, and the std sigma.'''
+    return (A / (sigma*np.sqrt(2*np.pi)))* np.exp(-np.square(x-mu)/(2*sigma**2))
