@@ -12,6 +12,14 @@ from iminuit.cost import LeastSquares
 ### Functions definition:
 
 ## Simulation functions:
+def RADEC2NSource(NSIDE, RA, DEC):
+    '''Return the number of sources by pixel, depending on the resolution, the right-ascention RA and the declination DEC.'''
+    NPIX = hp.nside2npix(NSIDE)
+    NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True)
+    NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
+    plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
+    return NSource_px
+    
 def get_RADEC2NSource(NSIDE, NSource_px_th):
     '''Return the simulated number of sources by pixel, the right-ascention and the declination, by uniformally randomizing RA and DEC, depending on the resolution NSIDE and the theorical number of sources by pixel NSource_px_th.'''
     #RA, DEC simulation:
@@ -21,9 +29,7 @@ def get_RADEC2NSource(NSIDE, NSource_px_th):
     DEC = np.degrees(np.arcsin(DEC_sin))
 
     #Number of sources by pixel conversion:
-    NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True)
-    NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
-    plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
+    NSource_px = RADEC2NSource(NSIDE, RA, DEC)
     return NSource_px, RA, DEC
 
 ## Plot functions:
@@ -97,5 +103,5 @@ def fit_minuit(x_fit, y_fit, y_err, model, init, par_name, get_fig=False, **kwar
     
 ## Fit models:
 def gauss(x,A,mu,sigma):
-    '''Return the usual gauss fuction of, depending on the amplitude A, the mean mu, and the std sigma.'''
+    '''Return the usual gauss function of x, depending on the amplitude A, the mean mu, and the std sigma.'''
     return (A / (sigma*np.sqrt(2*np.pi)))* np.exp(-np.square(x-mu)/(2*sigma**2))
