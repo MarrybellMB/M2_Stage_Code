@@ -20,6 +20,7 @@ def RADEC2NSource(NSIDE, RA, DEC):
     plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
     return NSource_px
     
+
 def get_RADEC2NSource(NSIDE, NSource_px_th):
     '''Return the simulated number of sources by pixel, the right-ascention and the declination, by uniformally randomizing RA and DEC, depending on the resolution NSIDE and the theorical number of sources by pixel NSource_px_th.'''
     #RA, DEC simulation:
@@ -33,6 +34,21 @@ def get_RADEC2NSource(NSIDE, NSource_px_th):
     return NSource_px, RA, DEC
 
 ## Plot functions:
+def get_savefig(fig, output_path, sufix, **kwargs):
+    """Save the figure fig; several format for the images can be chosen in the same time, by inputing a tuple or a list in the parmateer format.
+    This function is especially created to be used in other functions."""
+    ext = kwargs.get('format', 'pdf')
+    if type(ext)==tuple or type(ext)==list: #to save in several formats.
+        for e in ext:
+            output_file = output_path + '{}.{}'.format(sufix, e)
+            print('Saving {} in {}'.format(sufix, output_file))
+            fig.savefig(output_file, bbox_inches='tight') #bbox_inches ti$o not cut labels and title.
+    else:
+        output_file = output_path + '{}.{}'.format(sufix, ext)
+        print('Saving {} in {}'.format(sufix, output_file))
+        fig.savefig(output_file, bbox_inches='tight') #bbox_inches to not cut labels and title.
+
+
 def get_hist(x, title='', xlabel='Nb. of sources by pixel', ylabel='', show=True, **kwargs):
     '''Plot the histogram of x, and return the corresponding var, bins obtained from this histogram by:
     var, bins = plt.hist(x, **kwargs)[:-1]
