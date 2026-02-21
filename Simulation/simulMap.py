@@ -12,12 +12,18 @@ from iminuit.cost import LeastSquares
 ### Functions definition:
 
 ## Simulation functions:
-def RADEC2NSource(NSIDE, RA, DEC):
+def RADEC2NSource(NSIDE, RA, DEC, **kwargs):
     '''Return the number of sources by pixel, depending on the resolution, the right-ascention RA and the declination DEC.'''
     NPIX = hp.nside2npix(NSIDE)
     NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True)
     NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
     plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
+
+    #Saving figure:
+    output_path = kwargs.get("output_path", False)
+    if output_path:
+        ext = kwargs.get('format', 'pdf')
+        get_savefig(fig=plt, output_path=output_path, sufix="Hist_RADEC2NSource", format=ext)
     return NSource_px
     
 
@@ -58,13 +64,23 @@ def get_hist(x, title='', xlabel='Nb. of sources by pixel', ylabel='', show=True
     - title, xlabel, ylabel and **kwargs: allow to custom the histogram.
     - show: says if the histogram has to be showed by "if show: plt.show()".
     '''
-    var, bins = plt.hist(x, **kwargs)[:-1]
-    if title: plt.title(title)
-    if xlabel: plt.xlabel(xlabel)
-    if ylabel: plt.xlabel(ylabel)
+    if "figax" in kwargs.keys(): fig, ax = kwargs.pop("figax") #figax have to be tuple (fig, ax); using pop because hist doesn't accept figax argument.
+    else: fig, ax = plt.subplots() #not inserted as default value because it would create a new useless figure.
+    get_fig = kwargs.pop("get_fig", False)
+    var, bins = ax.hist(x, **kwargs)[:-1]
+    if title: ax.set_title(title)
+    if xlabel: ax.set_xlabel(xlabel)
+    if ylabel: ax.set_xlabel(ylabel)
     bins = (bins[1:] + bins[:-1])/2
     if show: plt.show()
-    return var, bins
+
+    #Saving figure:
+    output_path = kwargs.get("output_path", False)
+    if output_path:
+        ext = kwargs.get('format', 'pdf')
+        get_savefig(fig=fig, output_path=output_path, sufix="Hist", format=ext)
+    if get_fig: return var, bins, fig, ax
+    else: return var, bins
 
 
 def plot_fit(x_fit, y_fit, values, model, **kwargs):
@@ -87,6 +103,12 @@ def plot_fit(x_fit, y_fit, values, model, **kwargs):
     if "title" in kwargs.keys(): ax.set_title(kwargs["title"])
     if "xlabel" in kwargs.keys(): ax.set_xlabel(kwargs["xlabel"])
     if "ylabel" in kwargs.keys(): ax.set_xlabel(kwargs["ylabel"])
+
+    #Saving figure:
+    output_path = kwargs.get("output_path", False)
+    if output_path:
+        ext = kwargs.get('format', 'pdf')
+        get_savefig(fig=fig, output_path=output_path, sufix="Fit", format=ext)
     return fig, ax
 
 
