@@ -15,7 +15,7 @@ from iminuit.cost import LeastSquares
 def RADEC2NSource(NSIDE, RA, DEC, **kwargs):
     '''Return the number of sources by pixel, depending on the resolution, the right-ascention RA and the declination DEC.'''
     NPIX = hp.nside2npix(NSIDE)
-    NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True)
+    NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True, **kwargs)
     NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
     plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
 
@@ -113,7 +113,7 @@ def plot_fit(x_fit, y_fit, values, model, **kwargs):
 
 
 ## Fit functions:
-def fit_minuit(x_fit, y_fit, y_err, model, init, par_name, get_fig=False, **kwargs):
+def fit_minuit(x_fit, y_fit, y_err, model, init, par_name, get_fig=False, plot_fig=True, **kwargs):
     '''Fit data with iminuit and the least squares methode, and return the corresponding Minuit() instance.
     Also show the figure with both data and fit, by using plot_fit(x_fit, y_fit, values, model, **kwargs).
 
@@ -134,7 +134,8 @@ def fit_minuit(x_fit, y_fit, y_err, model, init, par_name, get_fig=False, **kwar
     try: m.minos()   # computes non symetrics uncertainties
     except: print('Unable to use minos()')
 
-    fig, ax = plot_fit(x_fit, y_fit, m.values, model, **kwargs)
+    if plot_fig: fig, ax = plot_fit(x_fit, y_fit, m.values, model, **kwargs)
+    else: get_fig = False #fig, ax only exist if plot_fig = True, so they can't be returned if plot_fig = False.
     if get_fig: return m, fig, ax
     else: return m
 
