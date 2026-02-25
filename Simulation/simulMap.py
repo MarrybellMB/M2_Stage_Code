@@ -16,14 +16,7 @@ def RADEC2NSource(NSIDE, RA, DEC, **kwargs):
     '''Return the number of sources by pixel, depending on the resolution, the right-ascention RA and the declination DEC.'''
     NPIX = hp.nside2npix(NSIDE)
     NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True, **kwargs)
-    NSource_px = plt.hist(NSource_px, bins=NPIX)[0]
-    plt.title("Histogram of nb. of sources by pixel\nwith NPIX = {}".format(NPIX))
-
-    #Saving figure:
-    output_path = kwargs.get("output_path", False)
-    if output_path:
-        ext = kwargs.get('format', 'pdf')
-        get_savefig(fig=plt, output_path=output_path, sufix="Hist_RADEC2NSource", format=ext)
+    NSource_px = np.bincount(NSource_px, minlength=NPIX)
     return NSource_px
     
 
