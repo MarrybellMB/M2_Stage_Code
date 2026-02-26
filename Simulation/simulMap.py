@@ -18,6 +18,12 @@ def RADEC2NSource(NSIDE, RA, DEC, **kwargs):
     NSource_px = hp.ang2pix(NSIDE, RA, DEC, lonlat=True, **kwargs)
     NSource_px = np.bincount(NSource_px, minlength=NPIX)
     return NSource_px
+
+
+def RADEC2NSource_Table(NSIDE, table, col_RA="RA", col_DEC="DEC", **kwargs):
+    '''Return the number of sources by pixel, depending on the resolution, and a table or a dataframe having right-ascention and declination in its colums.
+    col_RA and col_DEC allow to precise the names of these columns; by default: col_RA="RA", col_DEC="DEC"'''
+    return RADEC2NSource(NSIDE, table[col_RA], table[col_DEC], **kwargs)
     
 
 def get_RADEC2NSource(NSIDE, NSource_px_th):
@@ -31,6 +37,7 @@ def get_RADEC2NSource(NSIDE, NSource_px_th):
     #Number of sources by pixel conversion:
     NSource_px = RADEC2NSource(NSIDE, RA, DEC)
     return NSource_px, RA, DEC
+
 
 ## Plot functions:
 def get_savefig(fig, output_path, sufix, **kwargs):
